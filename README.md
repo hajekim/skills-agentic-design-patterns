@@ -612,20 +612,6 @@ for event in runner.run(user_id="user1", session_id="session1", new_message=mess
 
 > **Note**: `InMemoryRunner.run(text)` does **not** exist in the ADK. Always use the `Runner` + `InMemorySessionService` pattern shown above.
 
-## Revision History
-
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0 | 2026-03-27 | Initial release — 28 skills across 21 chapters + 7 appendices |
-| 1.1 | 2026-03-27 | **Priority 1**: Fixed ADK API bugs (`LlmAgent`, `Runner` + session-based pattern) |
-| 1.2 | 2026-03-27 | **Priority 2**: Added Context Engineering, ML Model-Based Routing, Agent Complexity Levels |
-| 1.3 | 2026-03-27 | **Priority 3**: Added Korean trigger phrases to all 28 skills |
-| 1.4 | 2026-03-27 | **Priority 4**: Upgraded to `gemini-2.5-flash`, added Related Skills, added Appendix F (Reasoning Engines) |
-| 1.5 | 2026-03-27 | **Claude Code compatibility**: Platform Compatibility table, branched Quick Start and Platform Usage, Claude Code install options A–D |
-| 1.6 | 2026-03-27 | **Language standardization**: README rewritten in English; Korean retained only in trigger phrase examples |
-| 1.7 | 2026-03-27 | **Gemini CLI / Antigravity guide expanded**: Verified paths (`.gemini/skills/`, `.agents/skills/`), skill management commands, install options A–D, split into separate sections |
-| 1.8 | 2026-03-27 | **Library migration**: `google-generativeai` → `google-genai` (23 files), `vertexai` → `client.models.embed_content` (2 files), deprecated LangChain → `langchain-chroma` / `langchain-text-splitters` / `RunnableWithMessageHistory` (2 files) |
-
 ## Source
 
 Based on **"Agentic Design Patterns"** by Antonio Gulli (424 pages, 21 chapters + 6 appendices).

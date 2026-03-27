@@ -375,6 +375,109 @@ After installation, skills are invocable as **slash commands** or auto-activated
 /p → /planning, /parallelization, /prompt-chaining, /prioritization ...
 ```
 
+## Multilingual Trigger System
+
+Every skill contains trigger phrases in **four languages** — English, Korean, Japanese, and Simplified Chinese. The AI platform reads these phrases from the `description:` field in each `SKILL.md` and activates the matching skill automatically.
+
+### How Triggers Are Structured
+
+Each `SKILL.md` description field follows this format:
+
+```
+"EN trigger 1", "EN trigger 2", ..., or [prose]. Also responds to Korean: "KR1", "KR2", .... Also responds to Japanese: "JA1", "JA2", .... Also responds to Chinese: "ZH1", "ZH2", .... Apply this skill to ...
+```
+
+**Example — Planning skill:**
+```yaml
+description: >
+  "plan complex tasks", "task decomposition", "step-by-step agent plan", ...
+  Also responds to Korean: "복잡한 작업 계획", "단계별 실행 계획", "목표 분해해줘", ...
+  Also responds to Japanese: "複雑なタスクの計画", "ステップバイステップの計画", "目標を分解して", ...
+  Also responds to Chinese: "复杂任务规划", "分步执行计划", "帮我分解目标", ...
+  Apply this skill to design or implement the Planning agentic design pattern.
+```
+
+### Trigger Coverage
+
+| Language | Triggers | Style |
+|----------|--------:|-------|
+| English | 474 | Technical terms + natural requests |
+| Korean | 337 | 기술 용어 + 구어체 ("~해줘", "~어떻게 해?") |
+| Japanese | 284 | 技術用語 + 口語体 ("~したい", "~教えて") |
+| Chinese | 281 | 技术术语 + 口语化 ("帮我~", "怎么~") |
+| **Total** | **1,376** | Across 28 skills |
+
+### English Trigger Examples
+
+```
+"Build a multi-step agent pipeline"          → Prompt Chaining
+"Create a multi-agent system for code review" → Multi-Agent Collaboration
+"How do I prevent my agent from hallucinating?" → RAG + Guardrails
+"retry logic for API failures"               → Exception Handling
+"set up MCP server"                          → MCP
+"semantic search over documents"             → RAG
+"choose agent framework"                     → Agentic Frameworks
+"thinking model for complex reasoning"       → Reasoning Engines
+```
+
+### Korean Trigger Examples (한국어 트리거)
+
+한국어는 기술 용어뿐만 아니라 실제로 사람들이 사용하는 구어체 표현으로도 활성화됩니다.
+
+```
+"프롬프트 체이닝으로 파이프라인 만들어줘"   → Prompt Chaining
+"에이전트 팀 구성하는 방법 알려줘"          → Multi-Agent Collaboration
+"병렬 작업 실행하는 에이전트 어떻게 만들어?" → Parallelization
+"MCP 구성을 해줘"                           → MCP
+"모델 컨텍스트 프로토콜 써보고 싶어"         → MCP
+"메모리뱅크 만들어줘"                       → Memory Management
+"컨텍스트 유지할 수 있는 에이전트"           → Memory Management
+"에이전트 오류 처리 어떻게 해?"             → Exception Handling
+"RAG 파이프라인 구성해줘"                   → RAG
+"추론 모델 언제 써야 해?"                   → Reasoning Engines
+"어떤 프레임워크 써야 해"                   → Agentic Frameworks
+```
+
+### Japanese Trigger Examples (日本語トリガー)
+
+```
+"マルチエージェントを構築したい"             → Multi-Agent Collaboration
+"並列処理するエージェントを作って"           → Parallelization
+"MCPサーバーを設定したい"                   → MCP
+"エージェントにメモリを持たせたい"           → Memory Management
+"APIのエラーハンドリングを実装して"          → Exception Handling
+"RAGパイプラインを作りたい"                 → RAG
+"推論モデルの使い方を教えて"                → Reasoning Engines
+"どのフレームワークを使うべきか"             → Agentic Frameworks
+"複雑な問題を深く考えるモデルを使いたい"     → Reasoning Engines
+```
+
+### Chinese Trigger Examples (中文触发词)
+
+```
+"帮我构建多智能体系统"                      → Multi-Agent Collaboration
+"怎么让智能体并行处理任务"                  → Parallelization
+"配置MCP服务器"                            → MCP
+"帮我记住对话内容"                          → Memory Management
+"智能体API调用失败怎么处理"                 → Exception Handling
+"搭建RAG知识库问答系统"                    → RAG
+"该用哪个框架构建智能体"                    → Agentic Frameworks
+"推理模型和普通模型有什么区别"              → Reasoning Engines
+"复杂任务规划和分解"                       → Planning
+```
+
+### Platform Behavior by Language
+
+| Platform | Language Handling |
+|----------|------------------|
+| **Claude Code** | Semantic — understands intent in any language; all 4 languages work equally |
+| **Gemini CLI** | Semantic — autonomously matches description to user request across languages |
+| **Antigravity** | Keyword matching — trigger phrase must appear as a substring in the user's message |
+
+> **Antigravity note**: Because Antigravity uses substring matching, conversational phrases matter. `"MCP 구성을 해줘"` works because `"MCP 구성"` is included as a trigger. Add custom triggers to the `description:` field if your team uses different terminology.
+
+---
+
 ## Skill Combination Guide
 
 Each skill's `## Related Skills` section shows concrete combination scenarios. Common production stacks:

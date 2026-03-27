@@ -1,6 +1,6 @@
 ---
 name: parallelization
-description: This skill should be used when the user wants to "run tasks in parallel", "concurrent LLM calls", "fan-out and fan-in", "parallel agents", "simultaneous execution", "reduce latency with concurrency", "parallel sub-tasks", or needs to execute multiple independent tasks simultaneously. Also responds to Korean: "병렬 작업 실행", "동시 LLM 호출", "팬아웃 팬인 패턴", "병렬 에이전트", "동시 실행", "동시성으로 지연 시간 감소". Apply this skill to design or implement the Parallelization agentic design pattern.
+description: This skill should be used when the user wants to "run tasks in parallel", "concurrent LLM calls", "fan-out and fan-in", "parallel agents", "simultaneous execution", "reduce latency with concurrency", "parallel sub-tasks", "parallel processing", "concurrent agent execution", "run agents simultaneously", "speed up with parallelism", "async agent execution", "batch LLM calls", "parallel workflow", "parallelize agent tasks", or needs to execute multiple independent tasks simultaneously. Also responds to Korean: "병렬 작업 실행", "동시 LLM 호출", "팬아웃 팬인 패턴", "병렬 에이전트", "동시 실행", "동시성으로 지연 시간 감소", "병렬로 실행", "동시에 여러 작업", "병렬 처리", "동시에 돌려줘", "빠르게 병렬로", "여러 작업 동시 실행해줘". Also responds to Japanese: "並列処理", "同時実行", "並列エージェント", "並行LLM呼び出し", "ファンアウト・ファンイン", "複数タスクを同時に実行したい", "処理速度を上げたい", "非同期エージェント", "バッチ処理", "並列で動かしたい" Also responds to Chinese: "并行处理", "并发执行", "并行智能体", "同时调用多个LLM", "扇出扇入模式", "多任务并行运行", "加快处理速度", "异步智能体", "批量LLM调用", "同时运行多个任务".. Apply this skill to design or implement the Parallelization agentic design pattern.
 version: 1.0.0
 ---
 

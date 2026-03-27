@@ -55,9 +55,9 @@ Gemini CLI manages skills with the `gemini skills` command and discovers them fr
 
 **Option A — User-level install (available in all projects):**
 ```bash
-git clone https://github.com/hajekim/skills-agentic-design-patterns
+git clone https://github.com/hajekim/agentic-design-patterns-skills
 # Link all 28 skills at once (creates symlinks in ~/.gemini/skills/)
-gemini skills link /path/to/skills-agentic-design-patterns/skills
+gemini skills link /path/to/agentic-design-patterns-skills/skills
 
 # Verify discovery
 gemini skills list
@@ -66,23 +66,23 @@ gemini skills list
 **Option B — Workspace install (current project only):**
 ```bash
 # Link to the project scope (.gemini/skills/ or .agents/skills/)
-gemini skills link /path/to/skills-agentic-design-patterns/skills --scope workspace
+gemini skills link /path/to/agentic-design-patterns-skills/skills --scope workspace
 
 # Or create symlinks manually
 mkdir -p .gemini/skills
-ln -s /path/to/skills-agentic-design-patterns/skills/* .gemini/skills/
+ln -s /path/to/agentic-design-patterns-skills/skills/* .gemini/skills/
 ```
 
 **Option C — Install specific skills from Git:**
 ```bash
 # Install individual skills by subdirectory
-gemini skills install https://github.com/hajekim/skills-agentic-design-patterns --path skills/prompt-chaining
-gemini skills install https://github.com/hajekim/skills-agentic-design-patterns --path skills/planning
+gemini skills install https://github.com/hajekim/agentic-design-patterns-skills --path skills/prompt-chaining
+gemini skills install https://github.com/hajekim/agentic-design-patterns-skills --path skills/planning
 ```
 
 **Option D — Install all skills from Git (workspace scope):**
 ```bash
-gemini skills install https://github.com/hajekim/skills-agentic-design-patterns --scope workspace
+gemini skills install https://github.com/hajekim/agentic-design-patterns-skills --scope workspace
 ```
 
 **Verify and manage skills in an interactive session:**
@@ -97,15 +97,15 @@ gemini skills install https://github.com/hajekim/skills-agentic-design-patterns 
 
 ```bash
 # Clone the repository
-git clone https://github.com/hajekim/skills-agentic-design-patterns
+git clone https://github.com/hajekim/agentic-design-patterns-skills
 
 # Option A — Workspace install (.agents/skills/ — cross-tool standard path)
 mkdir -p .agents/skills
-ln -s /path/to/skills-agentic-design-patterns/skills/* .agents/skills/
+ln -s /path/to/agentic-design-patterns-skills/skills/* .agents/skills/
 
 # Option B — User-level install (~/.agents/skills/)
 mkdir -p ~/.agents/skills
-ln -s /path/to/skills-agentic-design-patterns/skills/* ~/.agents/skills/
+ln -s /path/to/agentic-design-patterns-skills/skills/* ~/.agents/skills/
 
 # Verify by typing a trigger phrase; the matching skill activates:
 #   "Build a multi-step agent pipeline"   → Prompt Chaining

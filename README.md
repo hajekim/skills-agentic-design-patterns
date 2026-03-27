@@ -13,6 +13,24 @@ All skills are implemented with:
 - **Gemini API** (`gemini-2.5-flash`) as the default LLM
 - **Korean and English** trigger phrases for bilingual auto-activation
 
+## Gemini CLI Extension Version
+
+This repository provides **Skills** for multi-platform use (Gemini CLI, Antigravity, Claude Code).
+
+If you use **Gemini CLI exclusively**, the Extension version offers one-command installation and is listed on the [Gemini CLI extension gallery](https://geminicli.com/extensions/browse/):
+
+```bash
+gemini extensions install https://github.com/hajekim/agentic-design-patterns-extension
+```
+
+| | Skills (this repo) | [Extension](https://github.com/hajekim/agentic-design-patterns-extension) |
+|--|-------------------|-----------|
+| **Gemini CLI** | ✅ `gemini skills install` | ✅ `gemini extensions install` |
+| **Antigravity** | ✅ | — |
+| **Claude Code** | ✅ | — |
+| **geminicli.com gallery** | — | ✅ |
+| **MCP / Hooks extensible** | — | ✅ |
+
 ## Platform Compatibility
 
 This skill library works with both AI CLI platforms without any content modification.

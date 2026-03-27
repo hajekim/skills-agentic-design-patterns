@@ -1,5 +1,5 @@
 ---
-name: mcp
+name: mcp-setup
 description: This skill should be used when the user wants to "Model Context Protocol", "MCP server", "MCP client", "standardized tool integration", "JSON-RPC agent tools", "LLM tool protocol", "connect agents to external tools", "MCP primitives", "FastMCP", "ADK MCPToolset", "plug-and-play agent tools", "MCP integration", "tool server for agents", "MCP tools", "agent plugin system", "MCP setup", "model context protocol integration", or build agents that use the standardized MCP protocol for tool and resource integration. Also responds to Korean: "모델 컨텍스트 프로토콜", "MCP 서버", "MCP 클라이언트", "표준화된 도구 통합", "플러그 앤 플레이 에이전트 도구", "ADK MCP 툴셋", "MCP 구성", "MCP 설정", "MCP 써보고 싶어", "MCP 툴 연결", "MCP 서버 만들어줘", "도구 표준화해줘", "플러그인 에이전트". Also responds to Japanese: "モデルコンテキストプロトコル", "MCPサーバー", "MCPクライアント", "標準化ツール統合", "MCPの設定", "MCPを使いたい", "MCP構成", "エージェントのプラグインシステム", "ツールサーバー", "MCPツール連携" Also responds to Chinese: "模型上下文协议", "MCP服务器", "MCP客户端", "标准化工具集成", "MCP配置", "想用MCP", "MCP构建", "智能体插件系统", "工具服务器", "MCP工具集成".. Apply this skill to design or implement the Model Context Protocol (MCP) agentic design pattern.
 version: 1.0.0
 ---

@@ -1,4 +1,4 @@
-# Agentic Design Patterns Skills
+# Agentic Design Patterns — Skills
 
 A comprehensive skill library for building AI agents using proven agentic design patterns. Each skill follows the structured **DEFINE → PLAN → ACTION** workflow and is compatible with both **Gemini CLI / Antigravity** and **Claude Code**.
 

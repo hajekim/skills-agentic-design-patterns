@@ -175,16 +175,17 @@ def reflection_loop(initial_prompt: str, max_iterations: int = 3) -> str:
 
 ### Python asyncio Self-Reflection
 ```python
-import google.generativeai as genai
+from google import genai
 
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = genai.Client()
 
 def reflect_and_improve(task: str, max_iterations: int = 3) -> str:
     """Self-reflection loop using a single model."""
 
     # Generate initial response
-    response = model.generate_content(
-        f"Complete the following task:\n\n{task}"
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=f"Complete the following task:\n\n{task}"
     )
     current_output = response.text
 
@@ -199,7 +200,7 @@ Identify specific issues with accuracy, completeness, or clarity.
 If the response is satisfactory, output ONLY: APPROVED
 Otherwise, list the specific issues to fix."""
 
-        critique = model.generate_content(critique_prompt)
+        critique = client.models.generate_content(model='gemini-2.5-flash', contents=critique_prompt)
 
         if "APPROVED" in critique.text:
             return current_output
@@ -215,7 +216,7 @@ Issues identified:
 
 Rewrite the response to fix all identified issues."""
 
-        refined = model.generate_content(refine_prompt)
+        refined = client.models.generate_content(model='gemini-2.5-flash', contents=refine_prompt)
         current_output = refined.text
 
     return current_output
@@ -229,7 +230,7 @@ print(result)
 ```python
 from langgraph.graph import StateGraph, END
 from typing import TypedDict
-import google.generativeai as genai
+from google import genai
 
 class ReflectionState(TypedDict):
     task: str
@@ -239,22 +240,28 @@ class ReflectionState(TypedDict):
     max_iterations: int
     approved: bool
 
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = genai.Client()
 
 def generate_node(state: ReflectionState) -> dict:
     if state["iteration"] == 0:
-        response = model.generate_content(f"Complete: {state['task']}")
+        response = client.models.generate_content(model='gemini-2.5-flash', contents=f"Complete: {state['task']}")
     else:
-        response = model.generate_content(
-            f"Task: {state['task']}\n\nPrevious response:\n{state['current_output']}\n\n"
-            f"Issues:\n{state['critique']}\n\nImprove the response."
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=(
+                f"Task: {state['task']}\n\nPrevious response:\n{state['current_output']}\n\n"
+                f"Issues:\n{state['critique']}\n\nImprove the response."
+            )
         )
     return {"current_output": response.text, "iteration": state["iteration"] + 1}
 
 def critique_node(state: ReflectionState) -> dict:
-    critique = model.generate_content(
-        f"Evaluate this response to '{state['task']}':\n\n{state['current_output']}\n\n"
-        "List issues or output APPROVED if satisfactory."
+    critique = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=(
+            f"Evaluate this response to '{state['task']}':\n\n{state['current_output']}\n\n"
+            "List issues or output APPROVED if satisfactory."
+        )
     )
     approved = "APPROVED" in critique.text
     return {"critique": critique.text, "approved": approved}

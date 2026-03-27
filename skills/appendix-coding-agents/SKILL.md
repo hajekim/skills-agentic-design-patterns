@@ -126,7 +126,8 @@ Execute and validate:
 
 ### The Scaffolder Agent (Implementer)
 ```python
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 SCAFFOLDER_PROMPT = """You are a senior software engineer.
 Based on the requirements in 01_BRIEF.md and the existing patterns in 02_CODE/,
@@ -143,12 +144,13 @@ Output: Complete, runnable implementation."""
 
 def invoke_scaffolder(brief: str, existing_code: str) -> str:
     """Invoke the Scaffolder agent to implement a new feature."""
-    model = genai.GenerativeModel(
-        model_name='gemini-2.5-flash',
-        system_instruction=SCAFFOLDER_PROMPT
-    )
+    client = genai.Client()
     prompt = f"""BRIEF:\n{brief}\n\nEXISTING CODE PATTERNS:\n{existing_code}"""
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt,
+        config=types.GenerateContentConfig(system_instruction=SCAFFOLDER_PROMPT)
+    )
     return response.text
 ```
 
@@ -169,10 +171,7 @@ Output: A complete test file that can be run immediately with no modifications."
 
 def invoke_test_engineer(code_to_test: str, existing_tests: str, framework: str = "pytest") -> str:
     """Invoke the Test Engineer agent to write comprehensive tests."""
-    model = genai.GenerativeModel(
-        model_name='gemini-2.5-flash',
-        system_instruction=TEST_ENGINEER_PROMPT
-    )
+    client = genai.Client()
     prompt = f"""Testing Framework: {framework}
 
 CODE TO TEST:
@@ -180,7 +179,11 @@ CODE TO TEST:
 
 EXISTING TESTS (for style reference):
 {existing_tests}"""
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt,
+        config=types.GenerateContentConfig(system_instruction=TEST_ENGINEER_PROMPT)
+    )
     return response.text
 ```
 
@@ -200,12 +203,13 @@ Output: Documentation that can be copied directly into the codebase."""
 
 def invoke_documenter(code: str, audience: str = "internal developers") -> str:
     """Invoke the Documenter agent to generate technical documentation."""
-    model = genai.GenerativeModel(
-        model_name='gemini-2.5-flash',
-        system_instruction=DOCUMENTER_PROMPT
-    )
+    client = genai.Client()
     prompt = f"""Audience: {audience}\n\nCODE TO DOCUMENT:\n{code}"""
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt,
+        config=types.GenerateContentConfig(system_instruction=DOCUMENTER_PROMPT)
+    )
     return response.text
 ```
 
@@ -237,16 +241,17 @@ Output format:
 
 def invoke_process_agent(code_diff: str, project_context: str = "") -> str:
     """Invoke the Process Agent to critique and synthesize code review feedback."""
-    model = genai.GenerativeModel(
-        model_name='gemini-2.5-flash',
-        system_instruction=PROCESS_AGENT_PROMPT
-    )
+    client = genai.Client()
     prompt = f"""PROJECT CONTEXT:
 {project_context}
 
 CODE CHANGES TO REVIEW:
 {code_diff}"""
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt,
+        config=types.GenerateContentConfig(system_instruction=PROCESS_AGENT_PROMPT)
+    )
     return response.text
 ```
 

@@ -109,28 +109,29 @@ thinking_budget = {
 
 ### Standard Model (Fast Path)
 ```python
-import google.generativeai as genai
+from google import genai
 
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = genai.Client()
 
 def fast_agent(prompt: str) -> str:
     """Standard model for latency-sensitive tasks."""
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
     return response.text
 ```
 
 ### Thinking Model (Deep Reasoning Path)
 ```python
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
-# Thinking model for complex reasoning
-thinking_model = genai.GenerativeModel('gemini-2.5-flash-thinking')
+client = genai.Client()
 
 def reasoning_agent(problem: str, thinking_budget: int = 4096) -> dict:
     """Reasoning model with configurable thinking budget."""
-    response = thinking_model.generate_content(
-        problem,
-        generation_config=genai.GenerationConfig(
+    response = client.models.generate_content(
+        model='gemini-2.5-flash-thinking',
+        contents=problem,
+        config=types.GenerateContentConfig(
             # thinking_config is model-specific; check current API docs
             max_output_tokens=8192,
             temperature=1.0  # Reasoning models use temperature=1 by default
@@ -155,8 +156,10 @@ print(result["answer"])
 
 ### Hybrid Agent: Route by Complexity
 ```python
-import google.generativeai as genai
+from google import genai
 from enum import Enum
+
+client = genai.Client()
 
 class TaskComplexity(Enum):
     SIMPLE = "simple"
@@ -167,9 +170,7 @@ class HybridReasoningAgent:
     """Uses standard or reasoning model based on task complexity."""
 
     def __init__(self):
-        self.fast_model = genai.GenerativeModel('gemini-2.5-flash')
-        self.thinking_model = genai.GenerativeModel('gemini-2.5-flash-thinking')
-        self.pro_model = genai.GenerativeModel('gemini-2.5-pro')
+        self.client = genai.Client()
 
     def classify_complexity(self, task: str) -> TaskComplexity:
         """Classify task complexity using a lightweight model."""
@@ -182,7 +183,7 @@ Complex: mathematical proof, multi-hop reasoning, strategic planning, debugging 
 
 Task: {task}"""
 
-        response = self.fast_model.generate_content(classification_prompt)
+        response = self.client.models.generate_content(model='gemini-2.5-flash', contents=classification_prompt)
         label = response.text.strip().lower()
 
         if "complex" in label:
@@ -196,16 +197,13 @@ Task: {task}"""
         complexity = self.classify_complexity(task)
 
         if complexity == TaskComplexity.SIMPLE:
-            model = self.fast_model
             model_name = "gemini-2.5-flash"
         elif complexity == TaskComplexity.MEDIUM:
-            model = self.thinking_model
             model_name = "gemini-2.5-flash-thinking"
         else:
-            model = self.pro_model
             model_name = "gemini-2.5-pro"
 
-        response = model.generate_content(task)
+        response = self.client.models.generate_content(model=model_name, contents=task)
 
         return {
             "answer": response.text,

@@ -247,42 +247,37 @@ result = agent_executor.invoke({"input": "What is 15% of 847.50? Also search for
 
 ### Gemini Native Function Calling
 ```python
-import google.generativeai as genai
+from google import genai
+from google.genai import types
+
+client = genai.Client()
 
 # Define tool schemas
 tools = [
-    {
-        "function_declarations": [
-            {
-                "name": "search_web",
-                "description": "Search the internet for current information",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "The search query"
-                        }
-                    },
-                    "required": ["query"]
-                }
-            },
-            {
-                "name": "get_stock_price",
-                "description": "Get the current stock price for a ticker symbol",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "ticker": {
-                            "type": "string",
-                            "description": "Stock ticker symbol (e.g., AAPL, GOOGL)"
-                        }
-                    },
-                    "required": ["ticker"]
-                }
-            }
-        ]
-    }
+    types.Tool(function_declarations=[
+        types.FunctionDeclaration(
+            name="search_web",
+            description="Search the internet for current information",
+            parameters=types.Schema(
+                type="object",
+                properties={
+                    "query": types.Schema(type="string", description="The search query")
+                },
+                required=["query"]
+            )
+        ),
+        types.FunctionDeclaration(
+            name="get_stock_price",
+            description="Get the current stock price for a ticker symbol",
+            parameters=types.Schema(
+                type="object",
+                properties={
+                    "ticker": types.Schema(type="string", description="Stock ticker symbol (e.g., AAPL, GOOGL)")
+                },
+                required=["ticker"]
+            )
+        )
+    ])
 ]
 
 # Tool implementations
@@ -300,13 +295,16 @@ tool_functions = {
 }
 
 # Agentic loop with function calling
-model = genai.GenerativeModel('gemini-2.5-flash', tools=tools)
-chat = model.start_chat()
+contents = [types.Content(role="user", parts=[types.Part(text="What's the current price of Apple stock?")])]
 
-response = chat.send_message("What's the current price of Apple stock?")
+response = client.models.generate_content(
+    model='gemini-2.5-flash',
+    contents=contents,
+    config=types.GenerateContentConfig(tools=tools)
+)
 
 # Handle function calls
-while response.candidates[0].content.parts[0].function_call.name:
+while response.candidates[0].content.parts[0].function_call:
     function_call = response.candidates[0].content.parts[0].function_call
     func_name = function_call.name
     func_args = dict(function_call.args)
@@ -314,16 +312,20 @@ while response.candidates[0].content.parts[0].function_call.name:
     # Execute the tool
     tool_result = tool_functions[func_name](**func_args)
 
-    # Send tool result back to model
-    response = chat.send_message(
-        genai.protos.Content(
-            parts=[genai.protos.Part(
-                function_response=genai.protos.FunctionResponse(
-                    name=func_name,
-                    response={"result": tool_result}
-                )
-            )]
-        )
+    # Append model response and tool result to contents
+    contents.append(response.candidates[0].content)
+    contents.append(types.Content(
+        role="user",
+        parts=[types.Part(function_response=types.FunctionResponse(
+            name=func_name,
+            response={"result": tool_result}
+        ))]
+    ))
+
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=contents,
+        config=types.GenerateContentConfig(tools=tools)
     )
 
 print(response.text)

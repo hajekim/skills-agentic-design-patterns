@@ -76,7 +76,9 @@ Implement and iterate:
 
 ### Zero-Shot and Role Prompting
 ```python
-import google.generativeai as genai
+from google import genai
+
+client = genai.Client()
 
 # Role + instruction prompt (zero-shot)
 def create_system_prompt(role: str, task: str, constraints: list, output_format: str) -> str:
@@ -102,19 +104,16 @@ system_prompt = create_system_prompt(
     ],
     output_format='JSON: {"sentiment": "POSITIVE|NEGATIVE|NEUTRAL", "confidence": 0.0-1.0, "reason": "brief explanation"}'
 )
-
-model = genai.GenerativeModel(
-    model_name='gemini-2.5-flash',
-    system_instruction=system_prompt
-)
 ```
 
 ### Structured Output with Pydantic
 ```python
-import google.generativeai as genai
+from google import genai
 from pydantic import BaseModel
 from typing import Literal
 import json
+
+client = genai.Client()
 
 class SentimentResult(BaseModel):
     sentiment: Literal["POSITIVE", "NEGATIVE", "NEUTRAL"]
@@ -137,8 +136,6 @@ def extract_structured_output(text: str, schema: type[BaseModel]) -> BaseModel:
     Returns:
         Validated instance of the schema
     """
-    model = genai.GenerativeModel('gemini-2.5-flash')
-
     prompt = f"""Analyze the following text and return a JSON response matching this schema:
 {schema.model_json_schema()}
 
@@ -146,7 +143,7 @@ Text to analyze: {text}
 
 Return ONLY valid JSON, no other text."""
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
 
     # Parse and validate with Pydantic
     import re
@@ -234,7 +231,10 @@ Step 1:"""
         }
     }
 
-model = genai.GenerativeModel('gemini-2.5-flash')
+from google import genai
+from google.genai import types
+
+client = genai.Client()
 
 # Math reasoning — always use temperature=0
 cot_config = build_cot_prompt(
@@ -242,9 +242,10 @@ cot_config = build_cot_prompt(
     use_temperature_zero=True
 )
 
-response = model.generate_content(
-    cot_config["prompt"],
-    generation_config=genai.GenerationConfig(**cot_config["generation_config"])
+response = client.models.generate_content(
+    model='gemini-2.5-flash',
+    contents=cot_config["prompt"],
+    config=types.GenerateContentConfig(**cot_config["generation_config"])
 )
 print(response.text)
 ```

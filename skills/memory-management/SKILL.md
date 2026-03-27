@@ -178,7 +178,6 @@ def log_user_login(tool_context: ToolContext) -> dict:
 
 ### Long-Term Memory with Vector Store
 ```python
-import google.generativeai as genai
 from google.adk.agents import LlmAgent
 from google.adk.memory import InMemoryMemoryService
 from google.adk.runners import Runner
@@ -207,58 +206,66 @@ runner = Runner(
 ### Conversation Memory with LangChain
 ```python
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.memory import ConversationBufferWindowMemory, ConversationSummaryMemory
-from langchain.chains import ConversationChain
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_community.chat_message_histories import ChatMessageHistory
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 
-# Buffer Memory: keeps last K messages in context
-buffer_memory = ConversationBufferWindowMemory(k=5)
+# In-memory session store
+session_store: dict = {}
 
-# Summary Memory: summarizes older history to save tokens
-summary_memory = ConversationSummaryMemory(llm=llm)
+def get_session_history(session_id: str) -> ChatMessageHistory:
+    if session_id not in session_store:
+        session_store[session_id] = ChatMessageHistory()
+    return session_store[session_id]
 
-# Conversation chain with memory
-conversation = ConversationChain(
-    llm=llm,
-    memory=buffer_memory,  # or summary_memory
-    verbose=True
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are a helpful assistant."),
+    MessagesPlaceholder(variable_name="history"),
+    ("human", "{input}"),
+])
+
+# RunnableWithMessageHistory replaces deprecated ConversationChain
+conversation = RunnableWithMessageHistory(
+    prompt | llm,
+    get_session_history,
+    input_messages_key="input",
+    history_messages_key="history",
 )
 
-# The model now maintains conversation context
-response1 = conversation.predict(input="My name is Alice and I prefer Python.")
-response2 = conversation.predict(input="What's my name and preferred language?")
-# Response2 correctly recalls: "Your name is Alice and you prefer Python."
+config = {"configurable": {"session_id": "session1"}}
+
+response1 = conversation.invoke({"input": "My name is Alice and I prefer Python."}, config=config)
+response2 = conversation.invoke({"input": "What's my name and preferred language?"}, config=config)
+# response2 correctly recalls: "Your name is Alice and you prefer Python."
 ```
 
 ### Vector-Based Long-Term Memory
 ```python
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
-from langchain_community.vectorstores import Chroma
-from langchain.memory import VectorStoreRetrieverMemory
-from langchain.chains import ConversationChain
+from langchain_chroma import Chroma
 
 # Initialize embedding model
 embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
 # Vector store for semantic memory retrieval
 vectorstore = Chroma(embedding_function=embeddings, persist_directory="./agent_memory")
-
-# Create retriever that finds semantically similar past memories
 retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
 
-# Long-term memory that semantically searches past interactions
-vector_memory = VectorStoreRetrieverMemory(retriever=retriever)
-
-# Store memories manually (or through conversation chain)
-vector_memory.save_context(
-    {"input": "What's my budget for this project?"},
-    {"output": "You mentioned your budget is $50,000 for Q3."}
-)
+# Store memories as documents
+from langchain_core.documents import Document
+vectorstore.add_documents([
+    Document(
+        page_content="User mentioned their budget is $50,000 for Q3.",
+        metadata={"input": "What's my budget for this project?"}
+    )
+])
 
 # Retrieve semantically relevant memories
-relevant_memories = vector_memory.load_memory_variables({"prompt": "project finances"})
-print(relevant_memories)
+relevant_docs = retriever.invoke("project finances")
+for doc in relevant_docs:
+    print(doc.page_content)
 # Returns: context about the $50,000 budget
 ```
 

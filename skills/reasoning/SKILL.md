@@ -89,9 +89,9 @@ Implement structured reasoning:
 
 ### CoT Prompting
 ```python
-import google.generativeai as genai
+from google import genai
 
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = genai.Client()
 
 def chain_of_thought(problem: str) -> dict:
     """Solve a problem with explicit step-by-step reasoning."""
@@ -112,7 +112,7 @@ Think through this carefully:
 
 Final Answer: [state the answer clearly]"""
 
-    response = model.generate_content(cot_prompt)
+    response = client.models.generate_content(model='gemini-2.5-flash', contents=cot_prompt)
     text = response.text
 
     # Extract final answer
@@ -137,10 +137,10 @@ print(f"Answer: {result['final_answer']}")
 
 ### ReAct Pattern (Reason + Act)
 ```python
-import google.generativeai as genai
+from google import genai
 from typing import Callable
 
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = genai.Client()
 
 def react_agent(
     question: str,
@@ -182,7 +182,7 @@ Important: Always end with "Final Answer:" when you have the answer."""
     full_trace = []
 
     for iteration in range(max_iterations):
-        response = model.generate_content(messages)
+        response = client.models.generate_content(model='gemini-2.5-flash', contents=messages)
         agent_output = response.text
         full_trace.append(f"[Iteration {iteration + 1}]\n{agent_output}")
 
@@ -254,10 +254,10 @@ print(f"Answer: {result['answer']}")
 
 ### ToT for Complex Problems
 ```python
-import google.generativeai as genai
+from google import genai
 from typing import List
 
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = genai.Client()
 
 def tree_of_thought(problem: str, num_branches: int = 3, depth: int = 2) -> dict:
     """Explore multiple solution paths and select the best.
@@ -279,7 +279,7 @@ Problem: {problem}
 
 Output {num_branches} approaches, each starting with "Approach X:" where X is the number."""
 
-    branches_response = model.generate_content(branch_prompt)
+    branches_response = client.models.generate_content(model='gemini-2.5-flash', contents=branch_prompt)
     branches_text = branches_response.text
 
     # Parse branches
@@ -297,7 +297,7 @@ Approach: {approach}
 
 Work through the complete solution step by step, then state the final answer."""
 
-        response = model.generate_content(develop_prompt)
+        response = client.models.generate_content(model='gemini-2.5-flash', contents=develop_prompt)
         developed_solutions.append({
             "approach": approach,
             "solution": response.text,
@@ -327,7 +327,7 @@ Output:
 - Why it's best: [explanation]
 - Final Answer: [the answer from the best branch]"""
 
-    eval_response = model.generate_content(eval_prompt)
+    eval_response = client.models.generate_content(model='gemini-2.5-flash', contents=eval_prompt)
 
     # Extract best branch
     best_match = re.search(r'Best branch:\s*(\d+)', eval_response.text)
@@ -346,6 +346,11 @@ Output:
 
 ### Majority Vote for High-Accuracy Answers
 ```python
+from google import genai
+from google.genai import types
+
+client = genai.Client()
+
 def self_consistent_answer(problem: str, num_samples: int = 5, temperature: float = 0.7) -> dict:
     """Generate multiple solutions and use majority voting for accuracy.
 
@@ -359,11 +364,6 @@ def self_consistent_answer(problem: str, num_samples: int = 5, temperature: floa
     """
     from collections import Counter
 
-    model = genai.GenerativeModel(
-        'gemini-2.5-flash',
-        generation_config={"temperature": temperature}
-    )
-
     answers = []
     traces = []
 
@@ -374,7 +374,11 @@ Problem: {problem}
 
 Work through this systematically, then give your Final Answer: [answer]"""
 
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=temperature)
+        )
         text = response.text
         traces.append(text)
 

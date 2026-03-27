@@ -308,7 +308,7 @@ resilient_agent = LlmAgent(
 ```python
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, Optional
-import google.generativeai as genai
+from google import genai
 import time
 
 class ResilientState(TypedDict):
@@ -319,13 +319,14 @@ class ResilientState(TypedDict):
     max_retries: int
     status: str  # running/completed/failed/degraded
 
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = genai.Client()
 
 def execute_with_retry_node(state: ResilientState) -> dict:
     """Execute task with automatic retry on failure."""
     try:
-        response = model.generate_content(
-            f"Complete this task: {state['task']}"
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=f"Complete this task: {state['task']}"
         )
         return {
             "result": response.text,
@@ -353,8 +354,9 @@ def execute_with_retry_node(state: ResilientState) -> dict:
 def fallback_node(state: ResilientState) -> dict:
     """Provide degraded response when main execution fails."""
     errors = "\n".join(state.get("errors", []))
-    response = model.generate_content(
-        f"""The following errors occurred while completing the task:
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=f"""The following errors occurred while completing the task:
         {errors}
 
         Task: {state['task']}

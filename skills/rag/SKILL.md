@@ -75,10 +75,11 @@ Implement the RAG pipeline:
 ### Document Indexing Pipeline
 ```python
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFLoader, DirectoryLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.chains import RetrievalQA
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 from langchain_core.prompts import PromptTemplate
 
 # 1. Load documents
@@ -111,7 +112,7 @@ def load_and_index_documents(source_path: str, persist_dir: str) -> Chroma:
     return vectorstore
 
 # 2. Create RAG chain
-def create_rag_agent(persist_dir: str) -> RetrievalQA:
+def create_rag_agent(persist_dir: str):
     """Create a RAG-powered Q&A agent from an existing index."""
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
     vectorstore = Chroma(persist_directory=persist_dir, embedding_function=embeddings)
@@ -143,12 +144,14 @@ Answer (with citations):"""
 
     llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
 
-    rag_chain = RetrievalQA.from_chain_type(
-        llm=llm,
-        chain_type="stuff",  # Stuff all context into prompt
-        retriever=retriever,
-        chain_type_kwargs={"prompt": prompt},
-        return_source_documents=True  # Include sources in response
+    def format_docs(docs):
+        return "\n\n".join(doc.page_content for doc in docs)
+
+    rag_chain = (
+        {"context": retriever | format_docs, "question": RunnablePassthrough()}
+        | prompt
+        | llm
+        | StrOutputParser()
     )
 
     return rag_chain
@@ -157,21 +160,17 @@ Answer (with citations):"""
 vectorstore = load_and_index_documents("./documents", "./chroma_db")
 rag_agent = create_rag_agent("./chroma_db")
 
-result = rag_agent.invoke({"query": "What are the key principles of agentic design patterns?"})
-print(result["result"])
-print("\nSources:")
-for doc in result["source_documents"]:
-    print(f"  - {doc.metadata.get('source', 'Unknown')} p.{doc.metadata.get('page', '?')}")
+answer = rag_agent.invoke("What are the key principles of agentic design patterns?")
+print(answer)
 ```
 
 ### Advanced RAG with Query Expansion
 ```python
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
-import google.generativeai as genai
 
 embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
 vectorstore = Chroma(persist_directory="./chroma_db", embedding_function=embeddings)
@@ -273,7 +272,7 @@ Grounded Answer:"""
 from google.adk.agents import LlmAgent
 from google.adk.tools import FunctionTool
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 
 # Initialize knowledge base
 embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
@@ -361,6 +360,8 @@ rag_agent = LlmAgent(
 
 ### Vertex AI Vector Search (Production RAG)
 ```python
+from google import genai
+from google.genai.types import EmbedContentConfig
 from google.cloud import aiplatform
 from google.adk.tools import FunctionTool
 import numpy as np
@@ -379,15 +380,15 @@ def vertex_vector_search(query: str, index_endpoint_id: str, top_k: int = 5) -> 
     Returns:
         Nearest neighbor results with distances and metadata
     """
-    import google.generativeai as genai
+    client = genai.Client()
 
     # Embed the query
-    result = genai.embed_content(
-        model="models/text-embedding-004",
-        content=query,
-        task_type="retrieval_query"
+    result = client.models.embed_content(
+        model="text-embedding-004",
+        contents=query,
+        config=EmbedContentConfig(task_type="RETRIEVAL_QUERY")
     )
-    query_embedding = result['embedding']
+    query_embedding = result.embeddings[0].values
 
     # Search the vector index
     endpoint = aiplatform.MatchingEngineIndexEndpoint(index_endpoint_id)
@@ -409,7 +410,11 @@ def vertex_vector_search(query: str, index_endpoint_id: str, top_k: int = 5) -> 
 
 ### Evaluation Framework
 ```python
-def evaluate_rag_response(question: str, retrieved_docs: list, answer: str, model) -> dict:
+from google import genai
+
+client = genai.Client()
+
+def evaluate_rag_response(question: str, retrieved_docs: list, answer: str) -> dict:
     """Evaluate RAG response quality across key dimensions."""
 
     context = "\n".join([doc.page_content for doc in retrieved_docs])
@@ -427,7 +432,7 @@ Score and explain:
 
 Output JSON: {{"faithfulness": X, "relevance": X, "completeness": X, "explanation": "..."}}"""
 
-    response = model.generate_content(eval_prompt)
+    response = client.models.generate_content(model="gemini-2.5-flash", contents=eval_prompt)
     import json, re
     match = re.search(r'\{[\s\S]+\}', response.text)
     if match:

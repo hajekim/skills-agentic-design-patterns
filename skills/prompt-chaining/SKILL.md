@@ -193,20 +193,20 @@ Prompt 3: Interpret gathered information to determine output
 
 ### Using Gemini CLI Sequential Execution
 ```python
-import google.generativeai as genai
+from google import genai
+
+client = genai.Client()
 
 def prompt_chain(input_text: str) -> str:
-    model = genai.GenerativeModel('gemini-2.5-flash')
-
     # Step 1: Extract key information
     step1_prompt = f"Extract the technical specifications from:\n\n{input_text}"
-    step1_result = model.generate_content(step1_prompt)
+    step1_result = client.models.generate_content(model='gemini-2.5-flash', contents=step1_prompt)
     specifications = step1_result.text
 
     # Step 2: Transform to structured JSON
     step2_prompt = f"""Transform the following specifications into a JSON object
     with 'cpu', 'memory', and 'storage' as keys:\n\n{specifications}"""
-    step2_result = model.generate_content(step2_prompt)
+    step2_result = client.models.generate_content(model='gemini-2.5-flash', contents=step2_prompt)
 
     return step2_result.text
 

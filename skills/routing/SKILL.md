@@ -93,13 +93,11 @@ Route label: "billing" | "support" | "general" | ...
 
 ```python
 from sklearn.linear_model import LogisticRegression
-from google.cloud import aiplatform
+from google import genai
+from google.genai.types import EmbedContentConfig
 
 # Step 1: Generate embeddings for training examples
-import vertexai
-from vertexai.language_models import TextEmbeddingModel
-
-model = TextEmbeddingModel.from_pretrained("text-embedding-004")
+client = genai.Client()
 
 training_texts = [
     "I need to cancel my subscription",      # → billing
@@ -110,7 +108,12 @@ training_texts = [
 ]
 training_labels = ["billing", "support", "billing", "support", "sales"]
 
-embeddings = [model.get_embeddings([text])[0].values for text in training_texts]
+result = client.models.embed_content(
+    model="text-embedding-004",
+    contents=training_texts,
+    config=EmbedContentConfig(task_type="SEMANTIC_SIMILARITY")
+)
+embeddings = [e.values for e in result.embeddings]
 
 # Step 2: Train a lightweight classifier on embeddings
 classifier = LogisticRegression(max_iter=1000)
@@ -118,7 +121,12 @@ classifier.fit(embeddings, training_labels)
 
 # Step 3: Route at inference time (no LLM call needed)
 def ml_router(user_input: str) -> str:
-    embedding = model.get_embeddings([user_input])[0].values
+    result = client.models.embed_content(
+        model="text-embedding-004",
+        contents=user_input,
+        config=EmbedContentConfig(task_type="SEMANTIC_SIMILARITY")
+    )
+    embedding = result.embeddings[0].values
     return classifier.predict([embedding])[0]
 
 route = ml_router("I was overcharged on my last invoice")

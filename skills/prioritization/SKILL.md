@@ -82,7 +82,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from typing import Optional, Callable
-import google.generativeai as genai
+from google import genai
 
 @dataclass
 class PrioritizedTask:
@@ -198,12 +198,12 @@ class PriorityTaskQueue:
 
 ### LLM-Based Priority Scoring
 ```python
-def llm_prioritize_tasks(tasks: list, model, context: str = "") -> list:
+def llm_prioritize_tasks(tasks: list, client, context: str = "") -> list:
     """Use LLM to intelligently score and rank tasks.
 
     Args:
         tasks: List of task description strings
-        model: LLM model to use for scoring
+        client: genai.Client instance to use for scoring
         context: Additional context about current state/constraints
 
     Returns:
@@ -225,7 +225,7 @@ For each task, assign:
 Output as a ranked list, highest priority first:
 [Score] Task N: [task description] — [rationale]"""
 
-    response = model.generate_content(priority_prompt)
+    response = client.models.generate_content(model='gemini-2.5-flash', contents=priority_prompt)
 
     # Parse rankings (simplified — production should use structured output)
     import re
@@ -247,7 +247,7 @@ Output as a ranked list, highest priority first:
     return ranked
 
 # Usage
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = genai.Client()
 tasks = [
     "Update user documentation for new API endpoints",
     "Fix critical bug causing login failures for 10% of users",
@@ -256,7 +256,7 @@ tasks = [
     "Run weekly backup verification tests"
 ]
 
-ranked_tasks = llm_prioritize_tasks(tasks, model, context="Production incident in progress")
+ranked_tasks = llm_prioritize_tasks(tasks, client, context="Production incident in progress")
 for task in ranked_tasks:
     print(f"[{task['priority_score']:.0f}] {task['task']}")
 ```

@@ -248,7 +248,7 @@ print(result)
 ```python
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, List
-import google.generativeai as genai
+from google import genai
 
 class PlanningState(TypedDict):
     goal: str
@@ -257,12 +257,13 @@ class PlanningState(TypedDict):
     current_step_index: int
     final_report: str
 
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = genai.Client()
 
 def create_plan_node(state: PlanningState) -> dict:
     """Generate an execution plan for the goal."""
-    response = model.generate_content(
-        f"Break down this goal into 4-6 concrete steps:\n{state['goal']}\n\n"
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=f"Break down this goal into 4-6 concrete steps:\n{state['goal']}\n\n"
         "Output as a numbered list, one step per line."
     )
     steps = [line.strip() for line in response.text.split('\n') if line.strip() and line[0].isdigit()]
@@ -273,8 +274,9 @@ def execute_step_node(state: PlanningState) -> dict:
     current_step = state["plan"][state["current_step_index"]]
     context = "\n".join(state["completed_steps"]) if state["completed_steps"] else "No previous steps"
 
-    response = model.generate_content(
-        f"Goal: {state['goal']}\n\n"
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=f"Goal: {state['goal']}\n\n"
         f"Previous steps completed:\n{context}\n\n"
         f"Now execute this step: {current_step}\n\n"
         "Provide a detailed result of executing this step."
@@ -289,8 +291,9 @@ def execute_step_node(state: PlanningState) -> dict:
 def synthesize_node(state: PlanningState) -> dict:
     """Synthesize all completed steps into a final report."""
     all_steps = "\n\n".join(state["completed_steps"])
-    response = model.generate_content(
-        f"Goal: {state['goal']}\n\nCompleted steps:\n{all_steps}\n\n"
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=f"Goal: {state['goal']}\n\nCompleted steps:\n{all_steps}\n\n"
         "Synthesize all findings into a coherent final report."
     )
     return {"final_report": response.text}

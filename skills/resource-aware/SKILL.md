@@ -64,7 +64,8 @@ Implement resource-aware agent:
 
 ### Token Counter and Budget Tracker
 ```python
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -124,16 +125,17 @@ class ResourceAwareAgent:
 
     def __init__(self, budget: ResourceBudget):
         self.budget = budget
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.client = genai.Client()
 
     def generate(self, prompt: str, max_output_tokens: int = 1000) -> Optional[str]:
         """Generate response only if budget allows."""
         if not self.budget.is_within_budget:
             return f"Budget exceeded: {self.budget.summary()}"
 
-        response = self.model.generate_content(
-            prompt,
-            generation_config={"max_output_tokens": max_output_tokens}
+        response = self.client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(max_output_tokens=max_output_tokens)
         )
 
         # Record actual usage
@@ -148,8 +150,10 @@ class ResourceAwareAgent:
 
 ### Model Cascade (Cost Optimization)
 ```python
-import google.generativeai as genai
+from google import genai
 from typing import Callable
+
+client = genai.Client()
 
 class ModelCascade:
     """Try cheaper models first, escalate to more capable ones only when needed."""
@@ -180,8 +184,7 @@ class ModelCascade:
         escalations = 0
 
         for model_name, model_description in self.models[:max_escalations + 1]:
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(prompt)
+            response = client.models.generate_content(model=model_name, contents=prompt)
 
             if quality_checker(response.text):
                 return {
@@ -286,8 +289,7 @@ def cached_generate(prompt: str, model_name: str = "gemini-2.5-flash") -> str:
     if cached:
         return cached
 
-    model = genai.GenerativeModel(model_name)
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(model=model_name, contents=prompt)
     cache.set(prompt, model_name, response.text)
     return response.text
 ```
@@ -297,7 +299,7 @@ def cached_generate(prompt: str, model_name: str = "gemini-2.5-flash") -> str:
 def manage_context_window(
     messages: list,
     max_tokens: int,
-    model,
+    client,
     reserve_for_response: int = 1000
 ) -> list:
     """Trim message history to stay within token budget.
@@ -322,8 +324,9 @@ def manage_context_window(
     if middle_msgs:
         # Summarize middle portion
         middle_text = "\n".join([f"{m['role']}: {m['content']}" for m in middle_msgs])
-        summary_response = model.generate_content(
-            f"Summarize this conversation segment concisely:\n{middle_text}"
+        summary_response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=f"Summarize this conversation segment concisely:\n{middle_text}"
         )
         summary_msg = {
             "role": "system",

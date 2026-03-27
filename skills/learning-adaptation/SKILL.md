@@ -130,10 +130,10 @@ Base agent code → Run on benchmark tests → Score performance
 
 ## Implementation: Few-Shot Adaptive Learning
 ```python
-import google.generativeai as genai
+from google import genai
 from typing import List, Dict
 
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = genai.Client()
 
 class AdaptiveFewShotAgent:
     """Agent that learns from successful examples through few-shot prompting."""
@@ -152,7 +152,7 @@ class AdaptiveFewShotAgent:
                 few_shot_context += f"Query: {ex['query']}\nResponse: {ex['response']}\n\n"
 
         prompt = f"{few_shot_context}Now respond to: {user_query}"
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
         return response.text
 
     def record_feedback(self, query: str, response: str, success: bool, rating: float):
@@ -179,7 +179,7 @@ class AdaptiveFewShotAgent:
 What patterns make these responses successful? Write a concise instruction
 that captures these patterns for future responses."""
 
-        adaptation = model.generate_content(adaptation_prompt)
+        adaptation = client.models.generate_content(model='gemini-2.5-flash', contents=adaptation_prompt)
         return adaptation.text
 
 # Usage
@@ -281,10 +281,10 @@ adaptive_agent = LlmAgent(
 
 ## Implementation: SICA-Inspired Self-Improvement Loop
 ```python
-import google.generativeai as genai
+from google import genai
 import json
 
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = genai.Client()
 
 class SelfImprovingAgent:
     """Agent that iteratively improves its own instructions based on performance."""
@@ -297,8 +297,9 @@ class SelfImprovingAgent:
         """Run agent on benchmark tasks and return performance score."""
         scores = []
         for task in benchmark_tasks:
-            response = model.generate_content(
-                f"System: {self.current_instruction}\n\nTask: {task['query']}"
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=f"System: {self.current_instruction}\n\nTask: {task['query']}"
             )
             # Evaluate response against expected output
             eval_prompt = f"""Rate this response (0.0-1.0):
@@ -306,7 +307,7 @@ Task: {task['query']}
 Expected: {task['expected']}
 Response: {response.text}
 Output only a number between 0.0 and 1.0."""
-            score = float(model.generate_content(eval_prompt).text.strip())
+            score = float(client.models.generate_content(model='gemini-2.5-flash', contents=eval_prompt).text.strip())
             scores.append(score)
 
         avg_score = sum(scores) / len(scores)
@@ -332,7 +333,7 @@ Current score: {current_score:.2f}
 Analyze what's working and what's not. Propose an improved instruction that
 addresses weaknesses while preserving strengths. Output ONLY the new instruction."""
 
-        new_instruction = model.generate_content(improvement_prompt).text
+        new_instruction = client.models.generate_content(model='gemini-2.5-flash', contents=improvement_prompt).text
         new_score = self.run_with_benchmark(benchmark_tasks)
 
         if new_score > current_score:

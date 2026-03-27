@@ -66,7 +66,7 @@ Implement evaluation and monitoring:
 
 ### Automated Quality Assessment
 ```python
-import google.generativeai as genai
+from google import genai
 from dataclasses import dataclass
 from typing import List, Optional
 import json
@@ -88,7 +88,8 @@ class AgentEvaluator:
     """Evaluate agent responses using LLM-as-judge methodology."""
 
     def __init__(self, judge_model_name: str = "gemini-2.5-flash"):
-        self.judge = genai.GenerativeModel(judge_model_name)
+        self.client = genai.Client()
+        self.judge_model_name = judge_model_name
 
     def evaluate_response(
         self,
@@ -132,7 +133,7 @@ Output as JSON:
   "reasoning": "Brief explanation of scores"
 }}"""
 
-        result = self.judge.generate_content(eval_prompt)
+        result = self.client.models.generate_content(model=self.judge_model_name, contents=eval_prompt)
 
         # Parse JSON response
         match = re.search(r'\{[\s\S]+\}', result.text)
@@ -231,8 +232,8 @@ test_cases = [
 ]
 
 def my_agent(query: str) -> str:
-    model = genai.GenerativeModel('gemini-2.5-flash')
-    return model.generate_content(query).text
+    client = genai.Client()
+    return client.models.generate_content(model='gemini-2.5-flash', contents=query).text
 
 report = evaluator.evaluate_dataset(test_cases, my_agent)
 print(f"Pass rate: {report['pass_rate']}")

@@ -138,12 +138,14 @@ asyncio.run(main())
 
 ### Screenshot-Action Loop (Manual Implementation)
 ```python
-import google.generativeai as genai
+from google import genai
 import base64
 from PIL import Image
 import io
 from dataclasses import dataclass
 from typing import Optional
+
+client = genai.Client()
 
 @dataclass
 class UIAction:
@@ -160,7 +162,7 @@ class ScreenshotActionAgent:
 
     def __init__(self, task: str):
         self.task = task
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.client = genai.Client()
         self.action_history: list[UIAction] = []
         self.max_steps = 20
 
@@ -198,10 +200,10 @@ Respond with JSON:
 If the task is complete, use action_type "done"."""
 
         # Multimodal request with screenshot
-        response = self.model.generate_content([
-            prompt,
-            {"mime_type": "image/png", "data": screenshot_b64}
-        ])
+        response = self.client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[prompt, {"mime_type": "image/png", "data": screenshot_b64}]
+        )
 
         import json, re
         match = re.search(r'\{[\s\S]+\}', response.text)

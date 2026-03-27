@@ -179,15 +179,15 @@ synthesizer = LlmAgent(
 ### Python asyncio Implementation
 ```python
 import asyncio
-import google.generativeai as genai
+from google import genai
 
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = genai.Client()
 
 async def analyze_section(section: str, section_id: int) -> dict:
     """Analyze a document section asynchronously."""
     prompt = f"Analyze the following section and extract key insights:\n\n{section}"
     response = await asyncio.get_event_loop().run_in_executor(
-        None, model.generate_content, prompt
+        None, lambda: client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
     )
     return {"section_id": section_id, "analysis": response.text}
 
@@ -203,7 +203,7 @@ async def parallel_document_analysis(document: str) -> str:
     # Sequential synthesis step (depends on all parallel results)
     all_analyses = "\n".join([r["analysis"] for r in results])
     synthesis_prompt = f"Synthesize these section analyses:\n\n{all_analyses}"
-    final_response = model.generate_content(synthesis_prompt)
+    final_response = client.models.generate_content(model='gemini-2.5-flash', contents=synthesis_prompt)
     return final_response.text
 
 # Run parallel analysis

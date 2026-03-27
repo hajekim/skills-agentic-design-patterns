@@ -205,11 +205,12 @@ class HITLState(TypedDict):
 
 def plan_action_node(state: HITLState) -> dict:
     """Agent plans what action to take."""
-    import google.generativeai as genai
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    from google import genai
+    client = genai.Client()
 
-    response = model.generate_content(
-        f"""Task: {state['task']}
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=f"""Task: {state['task']}
 
         Plan the specific action to take. Describe:
         1. The exact action you propose
@@ -256,11 +257,12 @@ def human_review_node(state: HITLState) -> dict:
 
 def execute_action_node(state: HITLState) -> dict:
     """Execute the approved action."""
-    import google.generativeai as genai
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    from google import genai
+    client = genai.Client()
 
-    response = model.generate_content(
-        f"""Execute this approved action:
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=f"""Execute this approved action:
         Action: {state['proposed_action']}
         Details: {state['proposed_details']}
 

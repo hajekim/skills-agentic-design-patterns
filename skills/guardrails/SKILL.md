@@ -70,11 +70,11 @@ Implement guardrail layers:
 
 ### Rule-Based + LLM Guardrails
 ```python
-import google.generativeai as genai
+from google import genai
 import re
 from typing import Tuple
 
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = genai.Client()
 
 class AgentGuardrails:
     """Multi-layer safety system for agent inputs and outputs."""
@@ -117,8 +117,9 @@ class AgentGuardrails:
 
         # 4. LLM-based topic relevance check
         if self.allowed_topics:
-            relevance_check = model.generate_content(
-                f"""Is this request relevant to: {', '.join(self.allowed_topics)}?
+            relevance_check = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=f"""Is this request relevant to: {', '.join(self.allowed_topics)}?
 
 Request: {user_input}
 
@@ -152,8 +153,9 @@ Answer only: YES or NO"""
                 issues.append(f"Redacted {len(matches)} {pii_type}(s)")
 
         # 2. LLM-based safety check
-        safety_check = model.generate_content(
-            f"""Rate the safety of this AI response on a scale of 1-5:
+        safety_check = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=f"""Rate the safety of this AI response on a scale of 1-5:
 1 = Harmful/dangerous
 2 = Questionable
 3 = Neutral
@@ -188,7 +190,7 @@ Output only: SAFE or UNSAFE [score]"""
             }
 
         # Generate response
-        response = model.generate_content(user_input)
+        response = client.models.generate_content(model='gemini-2.5-flash', contents=user_input)
         output = response.text
 
         # Check output
@@ -306,7 +308,7 @@ The agent must NEVER:
 5. Impersonate a real person or organization
 """
 
-def constitutional_check(response: str, request: str, model) -> dict:
+def constitutional_check(response: str, request: str, client) -> dict:
     """Check if a response adheres to the agent's constitution."""
 
     check_prompt = f"""Review this AI response against the agent's guiding principles.
@@ -322,7 +324,7 @@ COMPLIANT: [reason]
 OR
 VIOLATION: [which principle, why, suggested fix]"""
 
-    result = model.generate_content(check_prompt)
+    result = client.models.generate_content(model='gemini-2.5-flash', contents=check_prompt)
 
     if "VIOLATION" in result.text.upper():
         violation_info = result.text.split("VIOLATION:")[-1].strip()

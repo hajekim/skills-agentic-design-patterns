@@ -284,7 +284,7 @@ for event in runner.run(user_id="user1", session_id="session1", new_message=mess
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, List, Annotated
 import operator
-import google.generativeai as genai
+from google import genai
 
 class CollaborationState(TypedDict):
     task: str
@@ -292,28 +292,31 @@ class CollaborationState(TypedDict):
     analysis_output: str
     final_report: str
 
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = genai.Client()
 
 def research_agent(state: CollaborationState) -> dict:
     """Agent 1: Gathers information."""
-    response = model.generate_content(
-        f"You are a research specialist. Research this topic thoroughly:\n{state['task']}\n\n"
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=f"You are a research specialist. Research this topic thoroughly:\n{state['task']}\n\n"
         "Gather key facts, statistics, and insights."
     )
     return {"research_output": response.text}
 
 def analysis_agent(state: CollaborationState) -> dict:
     """Agent 2: Analyzes the research."""
-    response = model.generate_content(
-        f"You are an analysis specialist. Analyze these research findings:\n{state['research_output']}\n\n"
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=f"You are an analysis specialist. Analyze these research findings:\n{state['research_output']}\n\n"
         "Identify patterns, implications, and key conclusions."
     )
     return {"analysis_output": response.text}
 
 def synthesis_agent(state: CollaborationState) -> dict:
     """Agent 3: Synthesizes everything into final output."""
-    response = model.generate_content(
-        f"Task: {state['task']}\n\n"
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=f"Task: {state['task']}\n\n"
         f"Research: {state['research_output']}\n\n"
         f"Analysis: {state['analysis_output']}\n\n"
         "Synthesize into a comprehensive final report."

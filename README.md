@@ -39,8 +39,9 @@ This skill library works with both AI CLI platforms without any content modifica
 
 ```bash
 # Install Python packages
-pip install google-adk google-generativeai langchain langchain-google-genai
+pip install google-genai google-adk langchain langchain-google-genai
 pip install langgraph crewai chromadb fastapi uvicorn
+pip install langchain-chroma langchain-text-splitters
 
 # Set your API key
 export GOOGLE_API_KEY="your-api-key-here"
@@ -464,8 +465,8 @@ All code examples in this library use `gemini-2.5-flash` as the default. Switch 
 
 ```python
 # Core dependencies
-google-adk>=0.1.0          # Google Agent Developer Kit
-google-generativeai>=0.8.0 # Gemini API (gemini-2.5-flash)
+google-genai>=1.0.0        # Gemini API SDK (from google import genai)
+google-adk>=1.0.0          # Google Agent Developer Kit
 langchain>=0.2.0           # LangChain framework
 langchain-google-genai     # LangChain + Gemini integration
 langgraph>=0.1.0           # LangGraph for stateful workflows
@@ -473,11 +474,13 @@ crewai>=0.1.0              # Multi-agent framework
 
 # Optional by pattern
 chromadb                   # Vector storage (RAG, Memory)
+langchain-chroma           # LangChain Chroma integration (replaces langchain_community.vectorstores)
+langchain-text-splitters   # Text splitting utilities (replaces langchain.text_splitter)
 fastapi                    # MCP/A2A server implementation
 uvicorn                    # ASGI server for MCP/A2A
 mcp                        # Model Context Protocol Python SDK
 scikit-learn               # ML-based routing classifier
-vertexai                   # Vertex AI embeddings for routing
+google-cloud-aiplatform    # Vertex AI Vector Search (MatchingEngine) — RAG production only
 ```
 
 ## ADK API Reference
@@ -504,6 +507,20 @@ for event in runner.run(user_id="user1", session_id="session1", new_message=mess
 ```
 
 > **Note**: `InMemoryRunner.run(text)` does **not** exist in the ADK. Always use the `Runner` + `InMemorySessionService` pattern shown above.
+
+## Revision History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0 | 2026-03-27 | Initial release — 28 skills across 21 chapters + 7 appendices |
+| 1.1 | 2026-03-27 | **Priority 1**: Fixed ADK API bugs (`LlmAgent`, `Runner` + session-based pattern) |
+| 1.2 | 2026-03-27 | **Priority 2**: Added Context Engineering, ML Model-Based Routing, Agent Complexity Levels |
+| 1.3 | 2026-03-27 | **Priority 3**: Added Korean trigger phrases to all 28 skills |
+| 1.4 | 2026-03-27 | **Priority 4**: Upgraded to `gemini-2.5-flash`, added Related Skills, added Appendix F (Reasoning Engines) |
+| 1.5 | 2026-03-27 | **Claude Code compatibility**: Platform Compatibility table, branched Quick Start and Platform Usage, Claude Code install options A–D |
+| 1.6 | 2026-03-27 | **Language standardization**: README rewritten in English; Korean retained only in trigger phrase examples |
+| 1.7 | 2026-03-27 | **Gemini CLI / Antigravity guide expanded**: Verified paths (`.gemini/skills/`, `.agents/skills/`), skill management commands, install options A–D, split into separate sections |
+| 1.8 | 2026-03-27 | **Library migration**: `google-generativeai` → `google-genai` (23 files), `vertexai` → `client.models.embed_content` (2 files), deprecated LangChain → `langchain-chroma` / `langchain-text-splitters` / `RunnableWithMessageHistory` (2 files) |
 
 ## Source
 

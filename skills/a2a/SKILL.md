@@ -123,10 +123,10 @@ from pydantic import BaseModel
 from typing import Optional, Any
 import uuid
 import time
-import google.generativeai as genai
+from google import genai
 
 app = FastAPI(title="ResearchAgent A2A Server")
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = genai.Client()
 
 # In-memory task store (use a real DB in production)
 tasks = {}
@@ -170,7 +170,7 @@ async def submit_task(task: TaskRequest) -> TaskStatus:
 
             Format as JSON: {{"summary": "...", "key_points": [...], "sources": [...]}}"""
 
-            response = model.generate_content(prompt)
+            response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
 
             import json, re
             match = re.search(r'\{[\s\S]+\}', response.text)

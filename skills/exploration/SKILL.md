@@ -81,7 +81,7 @@ import random
 import math
 from dataclasses import dataclass, field
 from typing import List, Callable, Optional
-import google.generativeai as genai
+from google import genai
 
 @dataclass
 class Strategy:
@@ -121,7 +121,7 @@ class ExplorationAgent:
         self.epsilon_decay = epsilon_decay
         self.min_epsilon = min_epsilon
         self.total_trials = 0
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.client = genai.Client()
 
     def select_strategy(self, method: str = "epsilon_greedy") -> Strategy:
         """Select a strategy using the specified exploration method."""
@@ -159,7 +159,7 @@ class ExplorationAgent:
     def execute_strategy(self, task: str, strategy: Strategy) -> str:
         """Execute a specific strategy on a task."""
         prompt = strategy.prompt_template.format(task=task)
-        response = self.model.generate_content(prompt)
+        response = self.client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
         return response.text
 
     def update_reward(self, strategy: Strategy, reward: float):
@@ -263,7 +263,7 @@ class CuriosityDrivenAgent:
         self.exploration_bonus = exploration_bonus
         self.visited_states: List[str] = []
         self.state_embeddings: List[list] = []
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.client = genai.Client()
 
     def get_novelty_score(self, candidate: str) -> float:
         """Score how novel a candidate approach is relative to visited states."""
@@ -297,7 +297,7 @@ Problem: {problem}
 
 Output {num_candidates} approaches, clearly labeled as Approach 1:, Approach 2:, etc."""
 
-        response = self.model.generate_content(diversity_prompt)
+        response = self.client.models.generate_content(model='gemini-2.5-flash', contents=diversity_prompt)
 
         # Parse approaches
         import re

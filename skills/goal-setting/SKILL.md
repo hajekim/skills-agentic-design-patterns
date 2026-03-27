@@ -216,7 +216,7 @@ goal_agent = LlmAgent(
 ```python
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, List, Optional
-import google.generativeai as genai
+from google import genai
 
 class GoalState(TypedDict):
     primary_goal: str
@@ -229,11 +229,13 @@ class GoalState(TypedDict):
     iteration: int
     max_iterations: int
 
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = genai.Client()
 
 def decompose_goals_node(state: GoalState) -> dict:
     """Decompose primary goal into concrete sub-goals."""
-    response = model.generate_content(
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=
         f"""Primary goal: {state['primary_goal']}
 
         Decompose this into 4-5 specific, measurable sub-goals.
@@ -264,8 +266,9 @@ def execute_sub_goal_node(state: GoalState) -> dict:
     completed = state.get("completed_sub_goals", [])
     context = "\n".join([f"✓ {sg}" for sg in completed]) if completed else "None yet"
 
-    response = model.generate_content(
-        f"""Primary goal: {state['primary_goal']}
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=f"""Primary goal: {state['primary_goal']}
 
         Already completed:
         {context}
@@ -308,8 +311,9 @@ def synthesize_node(state: GoalState) -> dict:
     """Synthesize all sub-goal outputs into final deliverable."""
     all_outputs = "\n\n".join(state.get("outputs", []))
 
-    response = model.generate_content(
-        f"""Primary goal: {state['primary_goal']}
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=f"""Primary goal: {state['primary_goal']}
 
         Results from all sub-goals:
         {all_outputs}
@@ -368,7 +372,6 @@ print(result["final_output"])
 
 ### Continuous Goal Monitoring
 ```python
-import google.generativeai as genai
 import time
 from dataclasses import dataclass, field
 from typing import List, Optional
@@ -460,13 +463,14 @@ print(monitor.get_summary())
 
 ### Competing Goals Resolution
 ```python
-def resolve_competing_goals(goals: list, model) -> str:
+def resolve_competing_goals(goals: list, client) -> str:
     """Resolve conflicts between competing goals using LLM judgment."""
     goal_list = "\n".join([f"{i+1}. (Priority {g['priority']}) {g['description']}"
                            for i, g in enumerate(goals)])
 
-    response = model.generate_content(
-        f"""You have these competing goals to balance:
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=f"""You have these competing goals to balance:
 {goal_list}
 
 Determine the optimal execution order considering:

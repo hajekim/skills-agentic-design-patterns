@@ -361,6 +361,64 @@ def monitored_agent(query: str, agent_fn, monitor: AgentMonitor) -> str:
     return response
 ```
 
+## Pattern-Specific Evaluation Criteria
+
+The dimensions above apply universally. When evaluating agents built with a specific pattern, add these targeted metrics.
+
+### RAG
+
+| Metric | What to Measure | Method |
+|--------|----------------|--------|
+| Retrieval relevance | Are retrieved documents relevant to the query? | precision@k, recall@k |
+| Faithfulness | Does the answer stay within the retrieved context? | Claim extraction + context overlap |
+| Hallucination rate | % of responses with claims not grounded in context | LLM-as-judge (flag unsupported claims) |
+| Answer correctness | Does the final answer match ground truth? | Exact match or LLM-as-judge |
+
+**Minimum test set:** queries paired with known ground truth answers and their correct source documents.
+
+---
+
+### Routing
+
+| Metric | What to Measure | Method |
+|--------|----------------|--------|
+| Routing accuracy | % of requests sent to the correct handler | Label vs. routed-to comparison |
+| Misroute rate | How often an incorrect handler receives a request | Count of label ≠ route |
+| Confidence calibration | When uncertain, does the router still route correctly? | Confidence score vs. accuracy correlation |
+| Edge case handling | Does ambiguous input fail gracefully, not silently? | Manual adversarial test cases |
+
+**Minimum test set:** labeled queries with the correct handler pre-assigned for each.
+
+---
+
+### Exception Handling
+
+| Metric | What to Measure | Method |
+|--------|----------------|--------|
+| Retry success rate | % of initially-failed requests that succeed after retry | Inject failures, count recoveries |
+| Fallback activation rate | How often fallback triggers vs. expected frequency | Compare to baseline failure rate |
+| Recovery latency | Time from failure to successful response | P50/P95 timing across failure scenarios |
+| False positive rate | Is the circuit breaker opening too aggressively? | Count unnecessary circuit opens |
+
+**Minimum test set:** simulated failure scenarios — timeouts, malformed responses, rate limit errors.
+
+---
+
+### Multi-Agent Collaboration
+
+| Metric | What to Measure | Method |
+|--------|----------------|--------|
+| Task completion rate | % of multi-step tasks reaching a final result | End-to-end task success count |
+| Subtask quality | Is each agent's individual output correct? | Per-agent LLM-as-judge |
+| Termination safety | Does the system terminate within a bounded number of steps? | Step counter with max-step limit |
+| Handoff fidelity | Is context preserved correctly across agent handoffs? | Compare input/output at each handoff boundary |
+
+**Minimum test set:** complex tasks requiring at least 3 agent handoffs with verifiable intermediate outputs.
+
+---
+
+> **When to add eval for other patterns:** Prioritize patterns where quality can be measured quantitatively. Patterns like `reflection`, `planning`, and `guardrails` each have natural metrics — output improvement rate, plan step coverage, and policy violation rate respectively.
+
 ## Key Takeaways
 
 - **Golden datasets**: Curate representative test cases with reference answers — these are your ground truth

@@ -23,7 +23,7 @@ Activate this skill when:
 - A task requires complex multi-step mathematical, logical, or strategic reasoning
 - Accuracy is more important than latency (e.g., medical, legal, financial decisions)
 - Standard models fail repeatedly on a problem that requires deliberate thinking
-- You need to choose between `gemini-2.5-flash`, `gemini-2.5-flash-thinking`, or `gemini-2.5-pro`
+- You need to choose between `gemini-2.5-flash`, `gemini-2.5-flash` with high Thinking Budget, or `gemini-2.5-pro`
 - Building agents that need to plan deeply before acting
 
 ## DEFINE → PLAN → ACTION Workflow
@@ -98,11 +98,11 @@ thinking_budget = {
 |-----------|-------------------|-----------|
 | Simple Q&A, summarization | `gemini-2.5-flash` | Fast, cheap, sufficient |
 | Code generation (moderate) | `gemini-2.5-flash` | Good at structured output |
-| Complex math / proofs | `gemini-2.5-flash-thinking` | Extended reasoning needed |
-| Multi-hop logical reasoning | `gemini-2.5-flash-thinking` | Hypothesis tracking needed |
+| Complex math / proofs | `gemini-2.5-flash` (high Thinking Budget) | Extended reasoning needed |
+| Multi-hop logical reasoning | `gemini-2.5-flash` (high Thinking Budget) | Hypothesis tracking needed |
 | Strategic planning agent | `gemini-2.5-pro` | Maximum capability |
 | Real-time routing / classification | `gemini-2.5-flash` | Latency-critical path |
-| Code debugging (complex) | `gemini-2.5-flash-thinking` | Root cause analysis depth |
+| Code debugging (complex) | `gemini-2.5-flash` (high Thinking Budget) | Root cause analysis depth |
 | Legal / medical document analysis | `gemini-2.5-pro` | Accuracy-critical |
 
 ## Implementation: Standard vs. Thinking Model
@@ -129,7 +129,7 @@ client = genai.Client()
 def reasoning_agent(problem: str, thinking_budget: int = 4096) -> dict:
     """Reasoning model with configurable thinking budget."""
     response = client.models.generate_content(
-        model='gemini-2.5-flash-thinking',
+        model='gemini-2.5-flash',  # use high Thinking Budget for extended reasoning
         contents=problem,
         config=types.GenerateContentConfig(
             # thinking_config is model-specific; check current API docs
@@ -199,7 +199,7 @@ Task: {task}"""
         if complexity == TaskComplexity.SIMPLE:
             model_name = "gemini-2.5-flash"
         elif complexity == TaskComplexity.MEDIUM:
-            model_name = "gemini-2.5-flash-thinking"
+            model_name = "gemini-2.5-flash"  # use high Thinking Budget for reasoning tasks
         else:
             model_name = "gemini-2.5-pro"
 
@@ -237,7 +237,7 @@ from google.genai.types import Content, Part
 # Use a thinking-capable model for the planning node
 planning_agent = LlmAgent(
     name="DeepPlanner",
-    model="gemini-2.5-flash-thinking",  # Extended reasoning for planning
+    model="gemini-2.5-flash",  # use high Thinking Budget for extended reasoning
     instruction="""You are a strategic planning agent. When given a complex goal:
     1. Think through all possible approaches and their trade-offs
     2. Identify dependencies and critical path
@@ -277,7 +277,7 @@ for event in runner.run(user_id="user1", session_id="session1", new_message=mess
 | Model | Latency | Cost | Best For |
 |-------|---------|------|----------|
 | `gemini-2.5-flash` | ~1-3s | Low | Routing, formatting, simple Q&A |
-| `gemini-2.5-flash-thinking` | ~5-30s | Medium | Math, code debugging, analysis |
+| `gemini-2.5-flash` (high Thinking Budget) | ~5-30s | Medium | Math, code debugging, analysis |
 | `gemini-2.5-pro` | ~10-60s | High | Research-grade reasoning, strategic planning |
 
 **Cost optimization patterns:**

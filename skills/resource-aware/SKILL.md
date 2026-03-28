@@ -161,7 +161,7 @@ class ModelCascade:
     def __init__(self):
         self.models = [
             ("gemini-2.5-flash", "fast and cheap"),
-            ("gemini-2.5-flash-thinking", "reasoning tasks"),
+            ("gemini-2.5-flash", "reasoning tasks (high Thinking Budget)"),
             ("gemini-1.5-pro", "complex, long-context"),
         ]
 

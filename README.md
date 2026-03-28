@@ -11,25 +11,7 @@ All skills are implemented with:
 - **LangChain / LangGraph** as secondary implementations
 - **CrewAI** for multi-agent collaboration patterns
 - **Gemini API** (`gemini-2.5-flash`) as the default LLM
-- **Korean and English** trigger phrases for bilingual auto-activation
-
-## Gemini CLI Extension Version
-
-This repository provides **Skills** for multi-platform use (Gemini CLI, Antigravity, Claude Code).
-
-If you use **Gemini CLI exclusively**, the Extension version offers one-command installation and is listed on the [Gemini CLI extension gallery](https://geminicli.com/extensions/browse/):
-
-```bash
-gemini extensions install https://github.com/hajekim/agentic-design-patterns-extension
-```
-
-| | Skills (this repo) | [Extension](https://github.com/hajekim/agentic-design-patterns-extension) |
-|--|-------------------|-----------|
-| **Gemini CLI** | ✅ `gemini skills install` | ✅ `gemini extensions install` |
-| **Antigravity** | ✅ | — |
-| **Claude Code** | ✅ | — |
-| **geminicli.com gallery** | — | ✅ |
-| **MCP / Hooks extensible** | — | ✅ |
+- **Multilingual triggers** (English / Korean / Japanese / Chinese) for auto-activation across language preferences
 
 ## Platform Compatibility
 
@@ -73,7 +55,6 @@ Gemini CLI manages skills with the `gemini skills` command and discovers them fr
 
 **Option A — User-level install (available in all projects):**
 ```bash
-git clone https://github.com/hajekim/agentic-design-patterns-skills
 # Link all 28 skills at once (creates symlinks in ~/.gemini/skills/)
 gemini skills link /path/to/agentic-design-patterns-skills/skills
 
@@ -94,13 +75,13 @@ ln -s /path/to/agentic-design-patterns-skills/skills/* .gemini/skills/
 **Option C — Install specific skills from Git:**
 ```bash
 # Install individual skills by subdirectory
-gemini skills install https://github.com/hajekim/agentic-design-patterns-skills --path skills/prompt-chaining
-gemini skills install https://github.com/hajekim/agentic-design-patterns-skills --path skills/planning
+gemini skills install https://github.com/your-org/agentic-design-patterns-skills.git --path skills/prompt-chaining
+gemini skills install https://github.com/your-org/agentic-design-patterns-skills.git --path skills/planning
 ```
 
 **Option D — Install all skills from Git (workspace scope):**
 ```bash
-gemini skills install https://github.com/hajekim/agentic-design-patterns-skills --scope workspace
+gemini skills install https://github.com/your-org/agentic-design-patterns-skills.git --scope workspace
 ```
 
 **Verify and manage skills in an interactive session:**
@@ -115,7 +96,7 @@ gemini skills install https://github.com/hajekim/agentic-design-patterns-skills 
 
 ```bash
 # Clone the repository
-git clone https://github.com/hajekim/agentic-design-patterns-skills
+git clone https://github.com/your-org/agentic-design-patterns-skills.git
 
 # Option A — Workspace install (.agents/skills/ — cross-tool standard path)
 mkdir -p .agents/skills
@@ -246,7 +227,7 @@ Every skill maps to one of four complexity levels. Use this framework to select 
 | [Google AgentSpace](skills/appendix-agentspace/SKILL.md) | No-code agent builder, Prompt Gallery, Knowledge Graph, Agent Designer | Enterprise teams deploying agents without writing code |
 | [AI CLI Agents](skills/appendix-ai-cli/SKILL.md) | Claude Code, Gemini CLI, Aider, GitHub Copilot CLI, Terminal-Bench | AI-assisted software development from the terminal |
 | [Coding Agent Teams](skills/appendix-coding-agents/SKILL.md) | Vibe Coding, Human-Agent Teams, Scaffolder/Test/Documenter/Optimizer agents | Organizing AI agents as specialists in a dev lifecycle |
-| [Reasoning Engines ⭐ NEW](skills/appendix-reasoning-engines/SKILL.md) | Thinking tokens, standard vs. reasoning models, inference-time compute scaling, hybrid routing | Choosing and integrating `gemini-2.5-flash-thinking` or `gemini-2.5-pro` for accuracy-critical tasks |
+| [Reasoning Engines ⭐ NEW](skills/appendix-reasoning-engines/SKILL.md) | Thinking tokens, standard vs. reasoning models, inference-time compute scaling, hybrid routing | Choosing between `gemini-2.5-flash` (high Thinking Budget) and `gemini-2.5-pro` for accuracy-critical tasks |
 
 ## Skill File Structure
 
@@ -262,7 +243,7 @@ Every `SKILL.md` contains:
 ```markdown
 ---
 name: <skill-name>
-description: <English + Korean trigger phrases for auto-activation>
+description: <EN + KR + JA + ZH trigger phrases for multilingual auto-activation>
 version: 1.0.0
 ---
 
@@ -575,13 +556,13 @@ Does the task require deep reasoning?
 
 ## Model Reference
 
-| Use Case | Recommended Model |
-|----------|-------------------|
-| General agent tasks, routing, formatting | `gemini-2.5-flash` |
-| Complex reasoning, math, code debugging | `gemini-2.5-flash-thinking` |
-| Research-grade analysis, strategic planning | `gemini-2.5-pro` |
+| Use Case | Recommended Model | Thinking Budget |
+|----------|-------------------|----------------|
+| General agent tasks, routing, formatting | `gemini-2.5-flash` | Dynamic (leave unset) |
+| Complex reasoning, math, code debugging | `gemini-2.5-flash` | Set high |
+| Research-grade analysis, strategic planning | `gemini-2.5-pro` | Set high |
 
-All code examples in this library use `gemini-2.5-flash` as the default. Switch to `-thinking` or `-pro` variants for accuracy-critical workloads. See [Reasoning Engines](skills/appendix-reasoning-engines/SKILL.md) for a full selection guide.
+All code examples in this library use `gemini-2.5-flash` as the default. Thinking Budget is a parameter available on Flash and Pro models — not a separate model variant. See [Reasoning Engines](skills/appendix-reasoning-engines/SKILL.md) for a full selection guide.
 
 ## Framework Requirements
 
@@ -629,6 +610,24 @@ for event in runner.run(user_id="user1", session_id="session1", new_message=mess
 ```
 
 > **Note**: `InMemoryRunner.run(text)` does **not** exist in the ADK. Always use the `Runner` + `InMemorySessionService` pattern shown above.
+
+## Revision History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0 | 2026-03-27 | Initial release — 28 skills across 21 chapters + 7 appendices |
+| 1.1 | 2026-03-27 | **Priority 1**: Fixed ADK API bugs (`LlmAgent`, `Runner` + session-based pattern) |
+| 1.2 | 2026-03-27 | **Priority 2**: Added Context Engineering, ML Model-Based Routing, Agent Complexity Levels |
+| 1.3 | 2026-03-27 | **Priority 3**: Added Korean trigger phrases to all 28 skills |
+| 1.4 | 2026-03-27 | **Priority 4**: Upgraded to `gemini-2.5-flash`, added Related Skills, added Appendix F (Reasoning Engines) |
+| 1.5 | 2026-03-27 | **Claude Code compatibility**: Platform Compatibility table, branched Quick Start and Platform Usage, Claude Code install options A–D |
+| 1.6 | 2026-03-27 | **Language standardization**: README rewritten in English; Korean retained only in trigger phrase examples |
+| 1.7 | 2026-03-27 | **Gemini CLI / Antigravity guide expanded**: Verified paths (`.gemini/skills/`, `.agents/skills/`), skill management commands, install options A–D, split into separate sections |
+| 1.8 | 2026-03-27 | **Library migration**: `google-generativeai` → `google-genai` (23 files), `vertexai` → `client.models.embed_content` (2 files), deprecated LangChain → `langchain-chroma` / `langchain-text-splitters` / `RunnableWithMessageHistory` (2 files) |
+| 1.9 | 2026-03-27 | **Multilingual triggers**: Added Japanese (281) and Chinese (281) triggers to all 28 skills; total 1,376 triggers across EN/KR/JA/ZH; added Multilingual Trigger System section to README |
+| 1.10 | 2026-03-27 | **Extension format**: Created Gemini CLI Extension (`gemini-extension.json`); added `github-release-extension/` and `github-release-skills/` as separate release folders |
+| 1.11 | 2026-03-27 | **MCP skill rename**: Renamed `mcp` frontmatter `name` to `mcp-setup` to avoid collision with Gemini CLI built-in `/mcp` command |
+| 1.12 | 2026-03-28 | **Cleanup**: Deleted legacy `github-release/` folder (superseded by `github-release-skills/`) |
 
 ## Source
 
